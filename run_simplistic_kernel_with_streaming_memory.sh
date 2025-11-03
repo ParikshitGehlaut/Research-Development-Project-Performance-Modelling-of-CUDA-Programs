@@ -4,20 +4,20 @@ set -euo pipefail
 #==============================================================================
 # SCRIPT CONFIGURATION
 #==============================================================================
-ARITH_INTENSITY=0
+ARITH_INTENSITY=512
 
-SRC="src/simplistic_kernel.cu"
-EXE="./bin/simplistic_kernel.out"
+SRC="src/simplistic_kernel_with_streaming_memory.cu"
+EXE="./bin/simplistic_kernel_with_streaming_memory.out"
 ARCH="sm_75"               # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
 
 # Output CSV file name (Updated)
-OUT="Results/RTX5000/simplistic/results_a${ARITH_INTENSITY}.csv"
+OUT="Results/RTX5000/simplistic_with_streaming_memory/results_a${ARITH_INTENSITY}.csv"
 
 # Kernel execution settings
 ITERATIONS=2000
 ARRAY_SIZE_MB=512
-THREADS_PER_BLOCK=256
-NUM_BLOCKS=3000
+THREADS_PER_BLOCK=64
+NUM_BLOCKS=1000
 
 # --- OCCUPANCY SWEEP ---
 # Array of shared memory sizes (in KB) to request per block for each run.
@@ -26,9 +26,10 @@ SHMEM_KB=(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64)
 #==============================================================================
 # SCRIPT EXECUTION
 #==============================================================================
-
+# Create directories if they don't exist
 mkdir -p bin Results/RTX5000/simplistic src Results/H100/simplistic Results/A100/simplistic
 mkdir -p Results/RTX5000/simplistic_with_streaming_memory Results/H100/simplistic_with_streaming_memory Results/A100/simplistic_with_streaming_memory
+
 
 # Compile the CUDA source file using nvcc.
 echo "Compiling..."
