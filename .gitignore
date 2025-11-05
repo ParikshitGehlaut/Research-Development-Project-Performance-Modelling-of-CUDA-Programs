@@ -9,3 +9,4 @@ bin
 *.sbatch
 *.out
 *.err
+.vscode

@@ -6,7 +6,7 @@ set -euo pipefail
 #==============================================================================
 SRC="src/simplistic_kernel.cu"
 EXE="./bin/simplistic_kernel.out"
-ARCH="sm_90"               # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
+ARCH="sm_75"               # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
 
 # Kernel execution settings
 ITERATIONS=2000
@@ -15,7 +15,7 @@ THREADS_PER_BLOCK=64
 NUM_BLOCKS=1000
 
 # Sweep parameters
-ARITH_INTENSITIES=(0 1 2 4 8 16 32 64 128 256 512)
+ARITH_INTENSITIES=(1 2 4 8 16 32 64 128 256 512)
 SHMEM_KB=(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64)
 
 #==============================================================================

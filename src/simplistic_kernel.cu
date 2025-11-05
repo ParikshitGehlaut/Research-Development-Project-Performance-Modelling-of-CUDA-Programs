@@ -97,10 +97,10 @@ __global__ void simplisticKernel(const uintptr_t* ptr_array,
 
 
     if (lane_id == 0) {
-        // prevent compiler optimisation
-        shmem[0] = (int)(curr_ptr & 0xFFFFFFFFULL);
         __threadfence_system();
         warp_events[warp_global_id].end_clock = clock();
+        // prevent compiler optimisation
+        shmem[0] = (int)(curr_ptr & 0xFFFFFFFFULL);
     }
 }
 
@@ -318,13 +318,22 @@ int main(int argc, char* argv[]) {
     double time_s = static_cast<double>(milliseconds) / 1000.0; // Convert ms to seconds
     double gflops = (time_s > 1e-9) ? (total_flops / (time_s * 1e9)) : 0.0; // Avoid division by zero
 
+    // Calculate memory throughput
+    double bytes_per_thread_access = sizeof(uintptr_t); // Assuming each dereference consumes one pointer's worth of data
+    double total_bytes_accessed = static_cast<double>(total_threads) * static_cast<double>(iterations) * bytes_per_thread_access;
+    double throughput_GBps = 0.0;
+    if (time_s > 1e-9) { // Avoid division by zero
+        throughput_GBps = total_bytes_accessed / time_s / (1024.0 * 1024.0 * 1024.0);
+    }
+
     // Print results in a parseable format for the script.
     cout << "\n===RESULT_SUMMARY_START===\n";
     cout << "ArithmeticIntensity: " << arith_intensity << "\n";
     cout << "IterationsPerWarp: " << iterations << "\n"; // Note: This is iterations per thread
+    cout << "ArraySize_MB: " << array_size_mb << "\n";
     cout << "ExecutionTime_ms: " << milliseconds << "\n";
-    // Output GFLOPS
     cout << "Throughput_GFLOPS: " << std::fixed << gflops << "\n";
+    cout << "Throughput_GBps: " << std::fixed << throughput_GBps << "\n";
     cout << "MaximumAttainedOccupancy_warpsPerSM: " << overall_max_occ << "\n";
     cout << "===RESULT_SUMMARY_END===\n";
 

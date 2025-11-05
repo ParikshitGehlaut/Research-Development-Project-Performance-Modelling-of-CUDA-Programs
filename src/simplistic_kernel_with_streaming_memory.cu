@@ -97,10 +97,10 @@ __global__ void simplisticKernel(const uintptr_t* ptr_array,
 
 
     if (lane_id == 0) {
-        // prevent compiler optimisation
-        shmem[0] = (int)(curr_ptr & 0xFFFFFFFFULL);
         __threadfence_system();
         warp_events[warp_global_id].end_clock = clock();
+        // prevent compiler optimisation
+        shmem[0] = (int)(curr_ptr & 0xFFFFFFFFULL);
     }
 }
 

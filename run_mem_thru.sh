@@ -25,6 +25,8 @@ NUM_BLOCKS=3000
 # List of array sizes (in MB) to test.
 ARRAY_SIZES_MB=(1 2 4 8 16 32 64 128 256 512 1024)
 
+mkdir -p bin Results/RTX5000/mem_thru Results/H100/mem_thru Results/A100/mem_thru
+
 #==============================================================================
 # SCRIPT EXECUTION
 #==============================================================================
@@ -33,8 +35,6 @@ ARRAY_SIZES_MB=(1 2 4 8 16 32 64 128 256 512 1024)
 echo "Compiling..."
 nvcc -O3 -arch=${ARCH} ${SRC} -o ${EXE}
 echo "Compiled ${EXE}"
-
-mkdir -p Results/RTX5000/mem_thru Results/H100/mem_thru Results/A100/mem_thru
 
 # Create CSV header
 echo "Array_Size_MB,Throughput_GBps,MaxAttainedOccupancy" > ${OUT}
