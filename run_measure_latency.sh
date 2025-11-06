@@ -3,8 +3,8 @@ set -euo pipefail
 
 SRC="src/measure_latency.cu"
 EXE="./bin/measure_latency.out"
-ARCH="sm_75" # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
-OUT_DIR="Results/RTX5000/Latency"
+ARCH="sm_90" # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+OUT_DIR="Results/H100/Latency"
 OUT_FILE="${OUT_DIR}/latency_summary.csv"
 
 ARRAY_SIZE_MB=512
@@ -12,7 +12,7 @@ ITERATIONS=20000
 NUM_BLOCKS=1000 
 
 SHMEM_KB_SWEEP=(0 4 8 16 32 48 64)
-THREADS_PER_BLOCK_SWEEP=(64 128 256 512)
+THREADS_PER_BLOCK_SWEEP=(32 64 128 256 512)
 
 
 mkdir -p bin "${OUT_DIR}"

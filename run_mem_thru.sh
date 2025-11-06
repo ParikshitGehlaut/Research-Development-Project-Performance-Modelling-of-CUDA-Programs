@@ -10,10 +10,10 @@ FIXED_SHMEM_BYTES=64
 
 SRC="src/simplistic_kernel.cu"
 EXE="./bin/simplistic_kernel.out"
-ARCH="sm_75"               # Target GPU architecture
+ARCH="sm_80"               # Target GPU architecture
 
 # Output CSV file name for this specific test
-OUT="Results/RTX5000/mem_thru/unstructured_mem_thru.csv"
+OUT="Results/A100/mem_thru/unstructured_mem_thru.csv"
 
 # Kernel execution settings
 ITERATIONS=2000
