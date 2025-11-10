@@ -4,7 +4,7 @@ import numpy as np
 import io
 
 # --- Configuration ---
-ARITH_INTENSITY = 512  # α = arithmetic intensity
+ARITH_INTENSITY = 1  # α = arithmetic intensity
 CSV_INPUT_FILE = f"results_a{ARITH_INTENSITY}.csv"
 PLOT_OUTPUT_FILE = f"simplistic_kernel_a{ARITH_INTENSITY}_a100.png"
 
@@ -31,7 +31,7 @@ def calculate_simplistic_kernel_model(warps_per_sm, arith_intensity):
     coeff = 4872.96 * arith_intensity
     term1 = warps_per_sm / (194 + arith_intensity * 4)
     term2 = 0.0421
-    term3 = 4 / (arith_intensity + 1)
+    term3 = 2 / (arith_intensity + 1)
     
     # Using np.full_like to ensure 'term2' and 'term3' are arrays of the same shape as 'warps_per_sm'
     bottleneck = np.minimum.reduce([
