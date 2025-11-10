@@ -68,7 +68,7 @@ def plot_throughput(csv_path, output_path):
     from matplotlib.ticker import ScalarFormatter
     plt.gca().yaxis.set_major_formatter(ScalarFormatter())
     
-    plt.title('Unstructured Memory Access Throughput vs. Array Size')
+    plt.title('Unstructured Memory Access Throughput vs. Array Size (A100)')
     plt.xlabel('Array Size (MB)')
     plt.ylabel('Peak Throughput (GB/s)')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
