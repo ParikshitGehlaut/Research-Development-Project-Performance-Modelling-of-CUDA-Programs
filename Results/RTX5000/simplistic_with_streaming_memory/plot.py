@@ -25,8 +25,8 @@ def setup_plot_style():
 def calculate_simplistic_kernel_model(warps_per_sm, arith_intensity):
     # 32 * 48 * 1.815 = 2787.84
     coeff = 2787.84 * arith_intensity
-    term1 = warps_per_sm / (418 + arith_intensity * 4.38)
-    term2 = 0.0314
+    term1 = warps_per_sm / (431 + arith_intensity * 4)
+    term2 = 0.0315
     term3 = 4 / (arith_intensity + 1)
     
     # Using np.full_like to ensure 'term2' and 'term3' are arrays of the same shape as 'warps_per_sm'
