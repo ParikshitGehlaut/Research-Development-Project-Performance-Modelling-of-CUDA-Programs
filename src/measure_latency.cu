@@ -257,48 +257,46 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    double total_avg_latency_per_op = 0;
-    int active_sm_count = 0;
+    // --- Process Results (Modified for Global Mean) ---
+    uint64_t global_total_cycles = 0;
+    size_t global_total_warps = 0;
     const uint64_t CLOCK_WRAP = (uint64_t)UINT32_MAX + 1ULL;
-    double min_latency_per_op = std::numeric_limits<double>::max();
+    
+    // We still track min_latency just for observation, though not used for the model base
+    double global_min_latency_per_op = std::numeric_limits<double>::max();
 
     for (auto const& [smid, results_vec] : sm_results) {
         if (results_vec.empty()) continue;
 
-        uint64_t total_cycles_on_sm = 0;
-        double min_latency_this_sm = std::numeric_limits<double>::max();
-
         for (const auto& res : results_vec) {
             uint64_t duration = (uint64_t)res.end_clock - (uint64_t)res.start_clock;
+            
+            // Handle clock wraparound
             if (res.end_clock < res.start_clock) {
                 duration += CLOCK_WRAP;
             }
-            total_cycles_on_sm += duration;
             
-            double latency_per_op = (double)duration / iterations;
-            if(latency_per_op < min_latency_this_sm) {
-                min_latency_this_sm = latency_per_op;
+            // Add to global accumulators
+            global_total_cycles += duration;
+            global_total_warps++;
+            
+            // Track absolute minimum (single warp) just for reference
+            double current_latency_op = (double)duration / iterations;
+            if (current_latency_op < global_min_latency_per_op) {
+                global_min_latency_per_op = current_latency_op;
             }
         }
-        
-        double avg_total_cycles_per_warp = (double)total_cycles_on_sm / results_vec.size();
-        double avg_cycles_per_op = avg_total_cycles_per_warp / iterations;
-        
-        total_avg_latency_per_op += avg_cycles_per_op;
-        active_sm_count++;
-        
-        if(min_latency_this_sm < min_latency_per_op) {
-            min_latency_per_op = min_latency_this_sm;
-        }
     }
 
-    double mean_latency = 0;
-    if (active_sm_count > 0) {
-        mean_latency = total_avg_latency_per_op / active_sm_count;
+    double global_mean_latency = 0;
+    if (global_total_warps > 0) {
+        // 1. Average cycles per warp
+        double avg_cycles_per_warp = (double)global_total_cycles / global_total_warps;
+        // 2. Normalize by instructions (iterations)
+        global_mean_latency = avg_cycles_per_warp / iterations;
     } else {
-        min_latency_per_op = 0; // Handle case with no results
+        global_min_latency_per_op = 0;
     }
-
 
     // --- Print Summary ---
     cout << "\n===RESULT_SUMMARY_START===\n";
@@ -307,9 +305,11 @@ int main(int argc, char* argv[]) {
     cout << "Shmem_Bytes: " << shmem_bytes << "\n";
     cout << "ThreadsPerBlock: " << threads_per_block << "\n";
     cout << "NumBlocks: " << num_blocks << "\n";
-    cout << "MeanLatency_cycles: " << std::fixed << std::setprecision(2) << mean_latency << "\n";
-    // Report the minimum observed latency, which is the "unloaded" latency
-    cout << "MinLatency_cycles: " << std::fixed << std::setprecision(2) << min_latency_per_op << "\n";
+    cout << "TotalWarpsMeasured: " << global_total_warps << "\n";
+    // This is the value to use for Volkov's model
+    cout << "MeanLatency_cycles: " << std::fixed << std::setprecision(2) << global_mean_latency << "\n";
+    // This is just for info (Section 6.6 of Volkov)
+    cout << "MinLatency_cycles: " << std::fixed << std::setprecision(2) << global_min_latency_per_op << "\n";
     cout << "===RESULT_SUMMARY_END===\n";
 
     // --- Cleanup ---
