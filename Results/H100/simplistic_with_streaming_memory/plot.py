@@ -23,14 +23,10 @@ def setup_plot_style():
     })
 
 def calculate_simplistic_kernel_model(warps_per_sm, arith_intensity):
-    """ 
-    Theoretical arithmetic throughput model for the Simplistic Kernel.
-    Arithmetic Throughput (GFLOPS) = 6402.24 * α * min( n / (265 + α*4), 0.0406, 4 / (α + 1) )
-    """
     # 32 * 114 * 1.755 = 6402.24
     coeff = 6402.24 * arith_intensity
-    term1 = warps_per_sm / (265 + arith_intensity * 4)
-    term2 = 0.0406
+    term1 = warps_per_sm / (380 + arith_intensity * 4)
+    term2 = 0.0620
     term3 = 4 / (arith_intensity + 1)
     
     # Using np.full_like to ensure 'term2' and 'term3' are arrays of the same shape as 'warps_per_sm'
