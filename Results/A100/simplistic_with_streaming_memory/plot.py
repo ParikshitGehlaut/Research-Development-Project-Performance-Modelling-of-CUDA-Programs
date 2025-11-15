@@ -4,7 +4,7 @@ import numpy as np
 import io
 
 # --- Configuration ---
-ARITH_INTENSITY = 128  # α = arithmetic intensity
+ARITH_INTENSITY = 512  # α = arithmetic intensity
 CSV_INPUT_FILE = f"results_a{ARITH_INTENSITY}.csv"
 PLOT_OUTPUT_FILE = f"simplistic_kernel_a{ARITH_INTENSITY}_a100.png"
 
@@ -23,14 +23,10 @@ def setup_plot_style():
     })
 
 def calculate_simplistic_kernel_model(warps_per_sm, arith_intensity):
-    """ 
-    Theoretical arithmetic throughput model for the Simplistic Kernel.
-    Arithmetic Throughput (GFLOPS) = 6289.92 * α * min( n / (265 + α*4), 0.0406, 4 / (α + 1) )
-    """
     # 32 * 108 * 1.410 = 4872.96
     coeff = 4872.96 * arith_intensity
-    term1 = warps_per_sm / (241 + arith_intensity * 4)
-    term2 = 0.0421
+    term1 = warps_per_sm / (240 + arith_intensity * 4)
+    term2 = 0.0648
     term3 = 2 / (arith_intensity + 1)
     
     # Using np.full_like to ensure 'term2' and 'term3' are arrays of the same shape as 'warps_per_sm'

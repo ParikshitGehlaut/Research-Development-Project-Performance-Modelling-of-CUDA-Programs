@@ -3,8 +3,8 @@ set -euo pipefail
 
 SRC="src/measure_arith_latency.cu"
 EXE="./bin/measure_arith_latency.out"
-ARCH="sm_75" # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
-OUT_DIR="Results/RTX5000/ArithLatency"
+ARCH="sm_80" # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+OUT_DIR="Results/A100/ArithLatency"
 OUT_FILE="${OUT_DIR}/arith_latency_summary.csv"
 
 # Iterations: Needs to be large to amortize clock() overhead
@@ -16,7 +16,7 @@ NUM_BLOCKS=1000
 # OpType: 1=FADD, 2=FMUL, 3=FMA
 OP_SWEEP=(1 2 3)
 OP_NAMES=("FADD" "FMUL" "FMA")
-SHMEM_KB_SWEEP=(0 4 8 16 32 48 64)
+SHMEM_KB_SWEEP=(0 4 8 16 32 48 64 72 80 96)
 THREADS_PER_BLOCK_SWEEP=(32 64 128 256) # No need for 512, 1024
 
 mkdir -p bin "${OUT_DIR}"

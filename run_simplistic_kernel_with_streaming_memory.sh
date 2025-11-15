@@ -6,7 +6,7 @@ set -euo pipefail
 #==============================================================================
 SRC="src/simplistic_kernel_with_streaming_memory.cu"
 EXE="./bin/simplistic_kernel_with_streaming_memory.out"
-ARCH="sm_75"               # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
+ARCH="sm_80"               # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
 
 # Kernel execution settings
 ITERATIONS=500
@@ -15,7 +15,7 @@ NUM_BLOCKS=1000
 
 # Sweep parameters
 ARITH_INTENSITIES=(1 2 4 8 16 32 64 128 256 512)
-SHMEM_KB=(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64)
+SHMEM_KB=(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96)
 THREADS_PER_BLOCKS=(32 64 128 256)
 
 #==============================================================================
@@ -37,7 +37,7 @@ echo
 #==============================================================================
 for AI in "${ARITH_INTENSITIES[@]}"; do
     # Output file per arithmetic intensity
-    OUT="Results/RTX5000/simplistic_with_streaming_memory/results_a${AI}.csv"
+    OUT="Results/A100/simplistic_with_streaming_memory/results_a${AI}.csv"
 
     # Create CSV header (include threads per block column)
     echo "THREADS_PER_BLOCK,SHMEM_KB,ExecutionTime_ms,GFLOPS,MaxAttainedOccupancy" > ${OUT}
@@ -89,4 +89,4 @@ done
 
 echo "========================================================"
 echo "All sweeps completed successfully."
-echo "Results are stored in Results/RTX5000/simplistic_with_streaming_memory/"
+echo "Results are stored in Results/A100/simplistic_with_streaming_memory/"

@@ -25,7 +25,7 @@ def setup_plot_style():
 def calculate_simplistic_kernel_model(warps_per_sm, arith_intensity):
     # 32 * 114 * 1.755 = 6402.24
     coeff = 6402.24 * arith_intensity
-    term1 = warps_per_sm / (380 + arith_intensity * 4)
+    term1 = warps_per_sm / (352 + arith_intensity * 4)
     term2 = 0.0620
     term3 = 4 / (arith_intensity + 1)
     
