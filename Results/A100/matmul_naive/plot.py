@@ -6,7 +6,7 @@ import os
 # --- Configuration ---
 ARITH_INTENSITY = 0.5  # Fixed for naive matmul (alpha)
 CSV_INPUT_FILE = "results_n4096.csv"
-PLOT_OUTPUT_FILE = "naive_h100.png"
+PLOT_OUTPUT_FILE = "naive_a100.png"
 
 def setup_plot_style():
     """Sets a professional, publication-quality plot style."""
@@ -30,14 +30,14 @@ def calculate_volkov_model(warps_per_sm, alpha):
     
     # --- Hardware Constants (H100 inferred) ---
     # num_sms (114) * clock (1.755) * 32 ~= 6402.24 (base coeff from previous script)
-    num_sms = 114           
-    clock_rate_ghz = 1.755  
+    num_sms = 108          
+    clock_rate_ghz = 1.410 
     warp_size = 32
     
     # --- Constraints ---
-    latency = 352.0         # L (cycles)
-    mem_thru = 0.0620       # Memory ops per cycle per SM
-    issue_thru = 4.0        # Issue bandwidth (instructions per cycle per SM)
+    latency = 240.0         # L (cycles)
+    mem_thru = 0.0648      # Memory ops per cycle per SM
+    issue_thru = 2.0        # Issue bandwidth (instructions per cycle per SM)
     
     # 1. Calculate the Memory Throughput Term: min( n/L, mem_thru, issue/(a+1) )
     #    'n' is warps_per_sm

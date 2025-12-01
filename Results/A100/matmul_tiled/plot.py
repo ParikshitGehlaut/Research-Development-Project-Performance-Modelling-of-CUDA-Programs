@@ -24,14 +24,14 @@ def calculate_volkov_model(warps_per_sm, alpha):
     Formula mult by 2 because 1 FMA = 2 FLOPs
     """
     # H100/A100 estimates (Adjust if needed for specific GPU)
-    num_sms = 114           # A100=108, H100=114
-    clock_rate_ghz = 1.755   # A100 Boost
+    num_sms = 108           # A100=108, H100=114
+    clock_rate_ghz = 1.410   # A100 Boost
     warp_size = 32
     
     # Roofline constraints
-    latency = 352.0         # Latency L (cycles)
-    mem_thru = 0.0620       # Memory ops per cycle per SM (approx)
-    issue_thru = 4.0        # Issue bandwidth
+    latency = 240.0         # Latency L (cycles)
+    mem_thru = 0.0648       # Memory ops per cycle per SM (approx)
+    issue_thru = 2.0        # Issue bandwidth
     
     # Terms
     term_latency = warps_per_sm / (latency + 4 * alpha)
