@@ -5,7 +5,7 @@ set -euo pipefail
 #==============================================================================
 SRC="src/naive_matmul.cu"
 EXE="./bin/naive_matmul.out"
-ARCH="sm_80" # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
+ARCH="sm_75" # Target GPU architecture (sm_75=Turing, sm_80=Ampere, sm_90=Hopper)
 
 # Matrix size sweep (repurposed from ARITH_INTENSITIES for comparison)
 N_VALUES=(4096)
@@ -20,7 +20,7 @@ THREADS_PER_BLOCKS=(32 64 128 256)
 # SCRIPT EXECUTION
 #==============================================================================
 # Create directories if they don't exist
-mkdir -p bin Results/H100/matmul_naive \
+mkdir -p bin Results/RTX5000/matmul_naive \
 Results/A100/matmul_naive \
 Results/RTX5000/matmul_naive
 
@@ -35,7 +35,7 @@ echo
 #==============================================================================
 for N in "${N_VALUES[@]}"; do
     # Output file per matrix size
-    OUT="Results/A100/matmul_naive/results_n${N}.csv"
+    OUT="Results/RTX5000/matmul_naive/results_n${N}.csv"
     # Create CSV header (include threads per block column; added GBps for completeness)
     echo "THREADS_PER_BLOCK,SHMEM_KB,ExecutionTime_ms,GFLOPS,GBps,MaxAttainedOccupancy" > ${OUT}
     echo "========================================================"
@@ -79,4 +79,4 @@ for N in "${N_VALUES[@]}"; do
 done
 echo "========================================================"
 echo "All sweeps completed successfully."
-echo "Results are stored in Results/A100/matmul_naive/"
+echo "Results are stored in Results/RTX5000/matmul_naive/"

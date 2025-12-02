@@ -134,9 +134,6 @@ int main(int argc, char* argv[]) {
     // (Req #4) N = thread block size
     const size_t N = static_cast<size_t>(threads_per_block);
 
-    // -----------------------------------------------------------------
-    // --- FIXED VALIDATION LOGIC ---
-    // -----------------------------------------------------------------
     // The highest starting thread index is (num_blocks * threads_per_block - 1)
     // But we partition blocks by N, so the highest start index for a thread is:
     // Start index = i + j*N 
@@ -158,9 +155,6 @@ int main(int argc, char* argv[]) {
         cerr << "Reduce iterations, blocks, or increase array size." << endl;
         return 1;
     }
-    // -----------------------------------------------------------------
-    // --- END FIXED VALIDATION ---
-    // -----------------------------------------------------------------
 
     uintptr_t *d_ptr_array = nullptr;
     CUDA_CHECK(cudaMalloc(&d_ptr_array, array_bytes));
@@ -184,10 +178,7 @@ int main(int argc, char* argv[]) {
     // --- Starting Addresses Setup ---
     int total_threads = num_blocks * threads_per_block;
     vector<uintptr_t> h_start_addrs(total_threads);
-    
-    // -----------------------------------------------------------------
-    // --- FIXED STARTING ADDRESS LOGIC ---
-    // -----------------------------------------------------------------
+
     // We space blocks by N (threads_per_block), not by (iterations * N)
     cout << "Setting start addresses with block spacing = " << N << " elements." << endl;
 
@@ -202,9 +193,6 @@ int main(int argc, char* argv[]) {
             h_start_addrs[global_tid] = reinterpret_cast<uintptr_t>(d_ptr_array + start_index);
         }
     }
-    // -----------------------------------------------------------------
-    // --- END FIXED STARTING ADDRESS ---
-    // -----------------------------------------------------------------
 
     uintptr_t *d_start_addrs = nullptr;
     CUDA_CHECK(cudaMalloc(&d_start_addrs, total_threads * sizeof(uintptr_t)));

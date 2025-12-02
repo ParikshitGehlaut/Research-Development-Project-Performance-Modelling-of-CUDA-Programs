@@ -4,7 +4,7 @@ set -euo pipefail
 # CONFIGURATION
 SRC="src/tiled_matmul.cu"
 EXE="./bin/tiled_matmul.out"
-ARCH="sm_90" # sm_80 for A100, sm_90 for H100
+ARCH="sm_75" # sm_80 for A100, sm_90 for H100
 
 N=4096
 ITERATIONS=100
@@ -13,10 +13,10 @@ NUM_BLOCKS=1000
 
 # Sweep Parameters
 THREADS_PER_BLOCKS=(32 64 128 256)
-SHMEM_KB_VALUES=(0 4 8 16 24 32 40 48 64 80 96)
+SHMEM_KB_VALUES=(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60)
 TILE_SIZES=(8 16)
 
-mkdir -p bin Results/H100/matmul_tiled
+mkdir -p bin Results/RTX5000/matmul_tiled
 
 # Compile
 echo "Compiling ${SRC}..."
@@ -24,7 +24,7 @@ nvcc -O3 -arch=${ARCH} ${SRC} -o ${EXE}
 echo "Compilation successful."
 
 for T in "${TILE_SIZES[@]}"; do
-    OUT="Results/H100/matmul_tiled/results_tiled_n${N}_t${T}.csv"
+    OUT="Results/RTX5000/matmul_tiled/results_tiled_n${N}_t${T}.csv"
     echo "THREADS_PER_BLOCK,TILE_DIM,SHMEM_KB,ExecutionTime_ms,GFLOPS,GBps,MaxAttainedOccupancy" > ${OUT}
     
     echo "=========================================="
