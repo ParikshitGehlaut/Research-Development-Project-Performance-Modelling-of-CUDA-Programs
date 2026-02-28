@@ -7,9 +7,10 @@ import os
 # ------------------------------
 # Configuration
 # ------------------------------
-CSV_FILE = 'arith_latency_summary.csv'
-OUTPUT_DIR = 'Results/RTX5000/ALU_Latency'
-TARGET_OP = 'FADD'  # Change to 'FMUL', 'IMAD', etc. as needed
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_FILE = os.path.join(SCRIPT_DIR, 'arith_latency_summary.csv')
+OUTPUT_DIR = SCRIPT_DIR  # Output to the same directory as the script
+TARGET_OP = 'FMUL'  # Change to 'FMUL', 'FMA', etc. as needed
 PLOT_TITLE = f'RTX 5000 {TARGET_OP} Mean Latency (Cycles) vs. Occupancy'
 
 # ------------------------------
@@ -112,12 +113,20 @@ def create_plot():
     
     plt.tight_layout()
     
-    # Ensure output directory exists
-    output_path = os.path.join(OUTPUT_DIR, f'{TARGET_OP}_latency_heatmap.png')
+    # Ensure output directory exists (though it's same as SCRIPT_DIR now)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"\nSuccess! Plot saved to {output_path}")
+    # Save formatted plot
+    plot_path = os.path.join(OUTPUT_DIR, f'{TARGET_OP}_latency_heatmap.png')
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    print(f"Plot saved to {plot_path}")
+    
+    # Save the filtered data to CSV in the same directory
+    csv_out_path = os.path.join(OUTPUT_DIR, f'{TARGET_OP}_latency_summary.csv')
+    df_op.to_csv(csv_out_path, index=False)
+    print(f"CSV data saved to {csv_out_path}")
+    
+    print("\nSuccess!")
     
     # Optionally show the plot
     # plt.show()

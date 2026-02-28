@@ -8,14 +8,14 @@ set -euo pipefail
 SRC="src/mem_lat_kernel.cu"
 EXE="./bin/mem_lat_kernel.out"
 ARCH="sm_75"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
-OUT_DIR="Results/RTX5000/Latency"
+OUT_DIR="Results/RTX5000/MemLatency"
 OUT_FILE="${OUT_DIR}/latency_summary.csv"
 
 ARRAY_SIZE_MB=512
 ITERATIONS=20000
 NUM_BLOCKS=1000
 
-SHMEM_KB_SWEEP=(0 4 8 16 32 48 64 72 80 96)
+SHMEM_KB_SWEEP=(0 4 8 16 32 48 64)
 THREADS_PER_BLOCK_SWEEP=(32 64 128 256 512)
 
 mkdir -p bin "${OUT_DIR}"
