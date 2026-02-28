@@ -4,24 +4,17 @@ import numpy as np
 import os
 import sys
 
-# ── Configuration ──
-if len(sys.argv) > 1 and sys.argv[1] != "--all":
-    ARITH_INTENSITY = int(sys.argv[1])
-else:
-    ARITH_INTENSITY = 256
-
-CSV_INPUT_FILE = f"results_a{ARITH_INTENSITY}.csv"
-PLOT_OUTPUT_FILE = f"synthetic_kernel_a{ARITH_INTENSITY}_rtx.png"
-
-# ── RTX 5000 parameters (4-byte loads, ÷128 normalization) ──
-MEM_LAT    = 431
-ALU_LAT    = 4
-MEM_THRU   = 0.0316    # BW/(SMs × 128) — Volkov's 4-byte load normalization
-ISSUE_THRU = 2.0
-COEFF      = 2787.84   # 32 × 48 × 1.815
+# ── RTX 5000 Verified Constants (4-byte loads, Volkov's Methodology) ──
+MEM_LAT    = 236        # Unloaded memory latency (cycles)
+ALU_LAT    = 4          # FMUL latency (cycles)
+MEM_THRU   = 0.0305     # 340 GB/s / (1.815 GHz × 48 SMs × 128 B/warp-instr)
+ISSUE_THRU = 2.0        # Warp-instructions per cycle per SM
+COEFF      = 2787.84    # 32 threads/warp × 48 SMs × 1.815 GHz
 
 
 def volkov_model(n, ai):
+    """Volkov's throughput model: P = C × AI × min(latency, memory, issue)"""
+    n = np.asarray(n, dtype=float)
     latency_bound = n / (MEM_LAT + ai * ALU_LAT)
     memory_bound  = np.full_like(n, MEM_THRU)
     issue_bound   = np.full_like(n, ISSUE_THRU / (ai + 1))
@@ -54,20 +47,22 @@ def generate_plot(df, arith_intensity, output_path):
     fig, ax = plt.subplots(figsize=(5, 3.5), dpi=300)
 
     max_occ = df["MaxAttainedOccupancy"].max()
-    n_vals = np.linspace(0.1, max_occ * 1.05, 500)
+    n_vals = np.linspace(0.1, max_occ * 1.1, 500)
     theo = volkov_model(n_vals, arith_intensity)
 
+    # Theoretical curve
     ax.plot(n_vals, theo, color='black', linewidth=2.0, linestyle='--',
-            label='Theoretical', zorder=2)
+            label='Volkov Model', zorder=2)
 
-    ax.plot(df["MaxAttainedOccupancy"], df["GFLOPS"],
-            marker='o', markersize=7, linestyle='none',
-            color='black', markerfacecolor='black',
-            label='Experimental', zorder=3)
+    # Experimental data
+    ax.scatter(df["MaxAttainedOccupancy"], df["GFLOPS"],
+               marker='o', s=50, color='black', facecolors='black',
+               label='Measured', zorder=3)
 
-    ax.set_xlabel("Warps / SM", fontweight='bold')
+    ax.set_xlabel("Occupancy (warps/SM)", fontweight='bold')
     ax.set_ylabel("GFLOP/s", fontweight='bold')
-    ax.set_xlim(left=0, right=max_occ * 1.05)
+    ax.set_title(f"AI = {arith_intensity}", fontsize=14, fontweight='bold')
+    ax.set_xlim(left=0, right=max_occ * 1.1)
     ax.set_ylim(bottom=0)
 
     ax.spines['top'].set_visible(False)
@@ -81,7 +76,7 @@ def generate_plot(df, arith_intensity, output_path):
     fig.tight_layout(pad=0.5)
     plt.savefig(output_path, bbox_inches="tight", dpi=300)
     plt.close()
-    print(f"✅ Plot saved: {output_path}")
+    print(f"✅ Saved: {output_path}")
 
 
 def batch_generate():
@@ -90,27 +85,27 @@ def batch_generate():
     for ai in ai_values:
         csv_file = f"results_a{ai}.csv"
         if not os.path.exists(csv_file):
+            print(f"⚠️  Skipping AI={ai}: {csv_file} not found")
             continue
         df = pd.read_csv(csv_file).sort_values("MaxAttainedOccupancy")
         if df.empty:
             continue
-        out = f"synthetic_kernel_a{ai}_rtx.png"
+        out = f"volkov_rtx5000_a{ai}.png"
         generate_plot(df, ai, out)
         generated += 1
-    print(f"\n✅ Generated {generated} plots.")
+    print(f"\n✅ Generated {generated} plots for RTX 5000.")
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--all":
         batch_generate()
-    else:
+    elif len(sys.argv) > 1:
+        ai = int(sys.argv[1])
+        csv_file = f"results_a{ai}.csv"
         try:
-            df = pd.read_csv(CSV_INPUT_FILE).sort_values("MaxAttainedOccupancy")
-            if df.empty:
-                print(f"❌ '{CSV_INPUT_FILE}' is empty.")
-            else:
-                generate_plot(df, ARITH_INTENSITY, PLOT_OUTPUT_FILE)
+            df = pd.read_csv(csv_file).sort_values("MaxAttainedOccupancy")
+            generate_plot(df, ai, f"volkov_rtx5000_a{ai}.png")
         except FileNotFoundError:
-            print(f"❌ '{CSV_INPUT_FILE}' not found.")
-        except KeyError as e:
-            print(f"❌ Missing column: {e}")
+            print(f"❌ '{csv_file}' not found.")
+    else:
+        print("Usage: python plot.py <AI_value> | python plot.py --all")
