@@ -150,12 +150,58 @@ Quadro RTX\,5000 (Turing), A100 (Ampere), and H100 (Hopper).
 
 Other analytical models exist.
 Baghsorkhi et al.~\cite{baghsorkhi2010adaptive} build a work-flow graph
-to predict execution time, and Zhang and Owens~\cite{zhang2011quantitative}
-extend Hong~\&~Kim's MWP/CWP approach with better memory modelling.
-% TODO: co-author may expand this paragraph.
-We choose Volkov's model for this study because of its simplicity and
-because it directly connects hardware parameters to throughput
-without requiring per-kernel program analysis.
+to predict execution time.
+Zhang and Owens~\cite{zhang2011quantitative} go further: they microbenchmark
+ALU and memory throughput separately at each occupancy and predict throughput as
+%
+\begin{equation}
+  \text{Throughput} = \min\!\bigl(\,\mathit{alu}(n),\;\alpha \cdot \mathit{mem}(n)\,\bigr)
+  \label{eq:zo}
+\end{equation}
+%
+where $\mathit{alu}(n)$ and $\mathit{mem}(n)$ are the measured throughputs of
+a pure-compute and a pure-memory kernel at $n$~warps/SM.
+The $\min$ assumes that compute and memory execute with perfect overlap,
+so the slower one is the only bottleneck.
+
+This assumption is accurate when one resource clearly dominates.
+At $\alpha = 0$ the kernel is pure memory, and at $\alpha \to \infty$ it is
+pure compute; in both limits Equation~\ref{eq:zo} is exact.
+The problem is at intermediate arithmetic intensities.
+When neither resource is saturated, the pipeline must stall to wait for
+prior results, and perfect overlap no longer holds.
+The model has no term for latency stalls between compute and memory, so it
+overestimates throughput in the latency-bound case.
+
+Figure~\ref{fig:zo_vs_volkov} shows this on our RTX\,5000 data at $\alpha = 64$.
+At low occupancy ($n \leq 8$~warps/SM), the Zhang and Owens prediction is
+$\approx 1.9\times$ above the measured data.
+Volkov's model, which folds both $mem_{lat}$ and $alu_{lat}$ into the
+latency-bound term $n/(mem_{lat} + \alpha \cdot alu_{lat})$, stays within
+6\% of experiment at the same occupancies.
+At high occupancy both models converge, because the memory bandwidth ceiling
+dominates and latency stalls are hidden.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{motivation/zo_vs_volkov_a64.png}
+  \caption{Zhang and Owens~\cite{zhang2011quantitative} vs.\ Volkov's model on
+    RTX\,5000 at $\alpha = 64$.
+    Left: Zhang and Owens overestimates throughput by up to $1.9\times$ at
+    low occupancy because perfect overlap is assumed between compute and memory.
+    Right: Volkov's model tracks the data across the full occupancy range
+    because $alu_{lat}$ is included in the latency-bound term.
+    Black dots are measured GFLOP/s; grey curves are model predictions.}
+  \label{fig:zo_vs_volkov}
+\end{figure}
+
+We choose Volkov's model for this study for three reasons.
+First, it is accurate at all occupancies, not just the throughput-bound extreme.
+Second, it needs only four scalar parameters ($mem_{lat}$, $alu_{lat}$,
+$mem_{thru}$, $issue_{thru}$), all of which we can measure with short
+microkernels and without per-kernel profiling.
+Third, it is a single closed-form expression, so it is easy to instantiate for
+a new GPU and to reason about analytically.
 
 
 % ------------------------------------------------------------------
@@ -394,6 +440,90 @@ The issue bound at 0.0606 is above the memory bound, so it never activates.
 The model predicts a peak throughput of
 $2787.84 \times 32 \times 0.0305 = 2720$~GFLOP/s,
 and the measured peak on RTX\,5000 at $\alpha = 32$ is $\approx 2875$~GFLOP/s.
+
+\paragraph{Hong \& Kim at the same configuration.}
+We now walk through the same configuration using Hong \& Kim's MWP/CWP
+framework, with the same four measured parameters as inputs.
+For a 1000-iteration kernel with $\alpha = 32$, the per-warp instruction
+counts are: $\mathit{num\_mem\_insts} = 1000$ and
+$\mathit{num\_total\_insts} = 33{,}000$ (one load plus 32 FMULs per iteration).
+The computation period between consecutive memory instructions is
+$\mathit{Comp\_p} = 33{,}000 / 1{,}000 = 33$~cycles.
+
+The memory warp parallelism bounds are:
+%
+\begin{align*}
+  \mathit{MWP}_{\text{no-BW}} &= mem_{lat} / \text{dep-delay}
+                                = 236 / 4 = 59 \\
+  \mathit{MWP}_{\text{peak-BW}} &= \frac{\text{BW/SM/cycle}}{\text{bytes/warp}}
+                                = \frac{3.90\;\text{B/cy}}{128\;\text{B}} = 7.2 \\
+  \mathit{MWP} &= \min(59,\; 7.2,\; n)
+\end{align*}
+%
+The computation warp parallelism is
+$\mathit{CWP} = \min\!\bigl((mem_{lat} + \mathit{Comp\_cycles})/\mathit{Comp\_cycles},\; n\bigr)
+              = \min(8.15,\; n)$.
+
+At $n = 1$: $\mathit{MWP} = 1$, $\mathit{CWP} = 1$.
+Since $\mathit{CWP} \geq \mathit{MWP}$ and $\mathit{MWP} \geq n$, Hong \& Kim
+uses \emph{Case\,1} (sufficient parallelism):
+$\mathit{exec\_cycles} = 236{,}000 + 33{,}000 = 269{,}000$.
+This gives $1 \times 32 \times 1000 \times 32 / 269{,}000 = 3.81$~adds/cycle/SM,
+or $3.81 \times 1.815 \times 48 \approx \mathbf{332}$~GFLOP/s.
+
+At $n = 12$: $\mathit{MWP} = 7.2$, $\mathit{CWP} = 8.15 \geq \mathit{MWP}$, but
+$\mathit{MWP} < n$, so Hong \& Kim uses \emph{Case\,2} (memory-bound):
+$\mathit{exec\_cycles} = 236{,}000 \times (12/7.2) + 33 \times 6.2 \approx 393{,}338$.
+This gives $12 \times 32 \times 1000 \times 32 / 393{,}338 = 31.22$~adds/cycle/SM,
+or $\approx \mathbf{2720}$~GFLOP/s --- agreeing with the Volkov prediction at saturation.
+
+Notice that Hong \& Kim never uses $alu_{lat}$; it sets computation cost via
+$\mathit{issue\_cycles\_per\_inst} = 1$.
+At $\alpha = 32$ this is acceptable because the memory latency (236~cycles)
+still dominates.
+At $\alpha = 64$ and beyond, the missing $alu_{lat}$ term causes the model to
+undercount computation time, leading to the $2\times$ overestimate shown in
+Figure~\ref{fig:hk_vs_volkov}.
+
+\paragraph{Zhang and Owens at the same configuration.}
+Zhang and Owens~\cite{zhang2011quantitative} use the same $mem_{lat}$,
+$mem_{thru}$, and $alu_{lat}$ parameters, but combine them via separate
+occupancy-dependent microbenchmark curves $\mathit{alu}(n)$ and
+$\mathit{mem}(n)$ (Equation~\ref{eq:zo}).
+We derive these curves analytically from our measured parameters:
+%
+\begin{align*}
+  \mathit{alu}(n) &= \min\!\bigl(n \cdot W / alu_{lat},\; \mathit{fp32\_cores}\bigr)
+                   = \min(8n,\; 64) \quad \text{[adds/cy/SM]} \\
+  \mathit{mem}(n) &= \min\!\bigl(n / mem_{lat},\; mem_{thru}\bigr)
+                   = \min(n/236,\; 0.0305) \quad \text{[warp-loads/cy/SM]}
+\end{align*}
+%
+At $n = 1$: $\mathit{alu}(1) = 8$, $\mathit{mem}(1) = 0.00424$, and
+$\alpha \cdot W \cdot \mathit{mem}(1) = 32 \times 32 \times 0.00424 = 4.34$.
+The model predicts $\min(8,\; 4.34) = 4.34$~adds/cy/SM,
+or $\approx \mathbf{378}$~GFLOP/s.
+This is $1.14\times$ above Volkov's prediction of 332~GFLOP/s because
+the perfect-overlap assumption in Equation~\ref{eq:zo} ignores the pipeline
+stalls that Volkov's latency term $n/(mem_{lat} + \alpha \cdot alu_{lat})$
+captures directly.
+
+At $n = 12$: $\mathit{alu}(12) = 64$, $\mathit{mem}(12) = 0.0305$, and
+$\alpha \cdot W \cdot \mathit{mem}(12) = 31.23$.
+The model predicts $\min(64,\; 31.23) = 31.23$~adds/cy/SM,
+or $\approx \mathbf{2721}$~GFLOP/s --- again converging with Volkov at saturation.
+
+All three models use the same four parameters.
+The difference is where each puts $alu_{lat}$:
+Volkov folds it into a single latency bound;
+Hong \& Kim ignores it;
+Zhang and Owens separates it into $\mathit{alu}(n)$ but then applies a
+perfect-overlap assumption that masks the stall cost.
+Our contribution is that we derive all four parameters --- including
+$issue_{thru}$ from the architecture specification --- from a single
+set of microkernels, making all three models directly comparable on the same hardware.
+
+
 
 
 % ------------------------------------------------------------------
