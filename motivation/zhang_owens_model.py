@@ -72,20 +72,20 @@ def zhang_owens_ops_per_cycle_sm(
     alu_peak_bound = float(gpu.fp32_cores_per_sm)
     alu_n = min(alu_lat_bound, alu_peak_bound)
 
-    # ── mem(n): warp-loads/cycle/SM → converted via factor W to add-scale ─
-    # Latency-bound: n warps each waiting mem_lat_cycles
-    mem_lat_bound  = n * W / gpu.mem_lat_cycles
-    # BW-bound: per-SM share of total peak bandwidth
+    # ── mem(n): warp-loads/cycle/SM ───────────────────────────────────────
+    # Latency-bound: n warps each waiting mem_lat_cycles to complete 1 warp-load
+    mem_lat_bound  = n / gpu.mem_lat_cycles
+    # BW-bound: per-SM share of total peak bandwidth (bytes/cy/SM) divided by bytes/warp-load
     bw_bytes_per_cycle  = (gpu.mem_bw_gbps * 1e9) / (gpu.clock_ghz * 1e9)
-    bw_per_sm_per_cycle = bw_bytes_per_cycle / gpu.n_sms          # bytes/cy/SM
+    bw_per_sm_per_cycle = bw_bytes_per_cycle / gpu.n_sms
     mem_peak_bound = bw_per_sm_per_cycle / (W * gpu.load_bytes_per_access)
-    mem_n = min(mem_lat_bound, mem_peak_bound)                    # loads/cy/SM
+    mem_n = min(mem_lat_bound, mem_peak_bound)                    # warp-loads/cy/SM
 
     # ── Z&O: Throughput = min( alu(n), α·mem(n) ) [adds/cy/SM] ───────────
-    # α loads × W threads × ai adds/load = ai·W adds , but alu_n is already in
-    # adds/cy/SM counted as individual thread-ops.  mem_n (loads/cy/SM) each
-    # load services W threads; α·mem_n gives the same per-SM add rate.
-    alpha_mem_n   = ai * mem_n
+    # mem_n is warp-loads/cy/SM. Each warp-load provides W thread-loads.
+    # Each thread-load allows `ai` ALU operations (adds).
+    # So the memory-bounded ALU throughput is mem_n * W * ai.
+    alpha_mem_n   = ai * W * mem_n
     zo_throughput = min(alu_n, alpha_mem_n)
 
     # ── "If adding": harmonic mean (no overlap) ───────────────────────────
@@ -145,16 +145,16 @@ if __name__ == "__main__":
           f"mem_bw={gpu.mem_bw_gbps} GB/s  n_sms={gpu.n_sms}")
 
     for ai in [2, 4, 16, 32, 64]:
-        print(f"\n{'─'*74}")
-        print(f"  AI = {ai}  (α = {ai} FP32 adds per memory load)")
+        print(f"\n{'-'*74}")
+        print(f"  AI = {ai}  (a = {ai} FP32 adds per memory load)")
         hdr_n    = f"{'n':>5}"
         hdr_zo   = f"{'Z&O [adds/cy/SM]':>18}"
         hdr_ia   = f"{'if-adding':>14}"
         hdr_vk   = f"{'Volkov':>14}"
         hdr_alu  = f"{'alu(n)':>12}"
-        hdr_amem = f"{'α·mem(n)':>12}"
+        hdr_amem = f"{'a*mem(n)':>12}"
         print(f"  {hdr_n} {hdr_alu} {hdr_amem} {hdr_zo} {hdr_ia} {hdr_vk}")
-        print(f"  {'─'*74}")
+        print(f"  {'-'*74}")
 
         n_arr = np.array([1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32])
         zo  = zhang_owens_curve(n_arr, gpu, ai)
