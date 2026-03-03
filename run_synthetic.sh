@@ -7,7 +7,7 @@ set -euo pipefail
 #==============================================================================
 SRC="src/synthetic_kernel_streaming.cu"
 EXE="./bin/synthetic_kernel_streaming.out"
-ARCH="sm_75"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+ARCH="sm_90"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
 
 # Kernel execution settings
 ITERATIONS=500
@@ -22,9 +22,7 @@ THREADS_PER_BLOCKS=(32 64 128 256)
 #==============================================================================
 # SCRIPT EXECUTION
 #==============================================================================
-mkdir -p bin Results/RTX5000/synthetic_streaming \
-         Results/A100/synthetic_streaming \
-         Results/H100/synthetic_streaming
+mkdir -p bin Results/H100/synthetic_streaming
 
 echo "Compiling..."
 nvcc -O3 -arch=${ARCH} ${SRC} -o ${EXE}
@@ -35,7 +33,7 @@ echo
 # MAIN NESTED LOOP
 #==============================================================================
 for AI in "${ARITH_INTENSITIES[@]}"; do
-    OUT="Results/RTX5000/synthetic_streaming/results_a${AI}.csv"
+    OUT="Results/H100/synthetic_streaming/results_a${AI}.csv"
 
     echo "THREADS_PER_BLOCK,SHMEM_KB,ExecutionTime_ms,GFLOPS,MaxAttainedOccupancy" > ${OUT}
 
@@ -80,4 +78,4 @@ done
 
 echo "========================================================"
 echo "All sweeps completed successfully."
-echo "Results are stored in Results/RTX5000/synthetic_streaming/"
+echo "Results are stored in Results/H100/synthetic_streaming/"

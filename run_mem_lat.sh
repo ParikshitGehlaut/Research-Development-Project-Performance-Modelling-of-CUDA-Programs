@@ -7,8 +7,8 @@ set -euo pipefail
 #==============================================================================
 SRC="src/mem_lat_kernel.cu"
 EXE="./bin/mem_lat_kernel.out"
-ARCH="sm_75"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
-OUT_DIR="Results/RTX5000/MemLatency"
+ARCH="sm_90"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+OUT_DIR="Results/H100/MemLatency"
 OUT_FILE="${OUT_DIR}/latency_summary.csv"
 
 ARRAY_SIZE_MB=512

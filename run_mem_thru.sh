@@ -8,9 +8,9 @@ set -euo pipefail
 #==============================================================================
 SRC="src/mem_thru_kernel.cu"
 EXE="./bin/mem_thru_kernel.out"
-ARCH="sm_75"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+ARCH="sm_90"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
 
-OUT="Results/RTX5000/mem_thru/streaming_mem_thru.csv"
+OUT="Results/H100/mem_thru/streaming_mem_thru.csv"
 
 # Fixed large array to guarantee DRAM hits
 # RTX 5000 L2 = 4MB, A100 L2 = 40MB, H100 L2 = 50MB

@@ -7,8 +7,8 @@ set -euo pipefail
 #==============================================================================
 SRC="src/alu_lat_kernel.cu"
 EXE="./bin/alu_lat_kernel.out"
-ARCH="sm_75"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
-OUT_DIR="Results/RTX5000/ArithLatency"
+ARCH="sm_90"               # sm_75=Turing, sm_80=Ampere, sm_90=Hopper
+OUT_DIR="Results/H100/ArithLatency"
 OUT_FILE="${OUT_DIR}/arith_latency_summary.csv"
 
 ITERATIONS=10000
