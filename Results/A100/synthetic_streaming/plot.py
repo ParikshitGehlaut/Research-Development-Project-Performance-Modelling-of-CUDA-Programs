@@ -14,9 +14,9 @@ CSV_INPUT_FILE = f"results_a{ARITH_INTENSITY}.csv"
 PLOT_OUTPUT_FILE = f"synthetic_kernel_a{ARITH_INTENSITY}_a100.png"
 
 # ── A100 parameters (4-byte loads, ÷128 normalization) ──
-MEM_LAT    = 240
+MEM_LAT    = 244
 ALU_LAT    = 4
-MEM_THRU   = 0.0648    # BW/(SMs × 128) — Volkov's 4-byte load normalization
+MEM_THRU   = 0.04166   # BW/(SMs × 128) — Volkov's 4-byte load normalization
 ISSUE_THRU = 2.0
 COEFF      = 4875.84   # 32 × 108 × 1.410
 

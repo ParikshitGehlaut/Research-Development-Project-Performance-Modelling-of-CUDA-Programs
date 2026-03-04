@@ -14,9 +14,9 @@ CSV_INPUT_FILE = f"results_a{ARITH_INTENSITY}.csv"
 PLOT_OUTPUT_FILE = f"synthetic_kernel_a{ARITH_INTENSITY}_h100.png"
 
 # ── H100 parameters (4-byte loads, ÷128 normalization) ──
-MEM_LAT    = 352
+MEM_LAT    = 347
 ALU_LAT    = 4
-MEM_THRU   = 0.0620    # BW/(SMs × 128) — Volkov's 4-byte load normalization
+MEM_THRU   = 0.04230    # BW/(SMs × 128) — Volkov's 4-byte load normalization
 ISSUE_THRU = 4.0        # H100 has 32 FP32 cores/partition → 4.0 IPC/SM
 COEFF      = 6401.28   # 32 × 114 × 1.755
 

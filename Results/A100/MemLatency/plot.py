@@ -4,101 +4,117 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 
-# --- Configuration ---
-# Ensure this matches the OUT_FILE from your Bash script
-CSV_FILE = 'Results/A100/Latency/latency_summary.csv'
-OUTPUT_IMAGE = 'Results/A100/Latency/latency_heatmap.png'
+# ------------------------------
+# Configuration
+# ------------------------------
+CSV_FILE = 'latency_summary.csv'
+OUTPUT_IMAGE = 'latency_heatmap_a100.png'
 PLOT_TITLE = 'A100 Mean Memory Latency (Cycles) vs. Occupancy'
-# --- End Configuration ---
+# ------------------------------
 
 def create_plot():
     print(f"Reading data from {CSV_FILE}...")
+
     if not os.path.exists(CSV_FILE):
         print(f"Error: File not found at {CSV_FILE}")
-        print("Please run the ./run_memory_latency.sh script first.")
+        print("Please run ./run_memory_latency.sh first.")
         return
 
-    # Read the CSV data
+    # Read CSV
     try:
         df = pd.read_csv(CSV_FILE)
     except pd.errors.EmptyDataError:
-        print(f"Error: {CSV_FILE} is empty. No data to plot.")
+        print(f"Error: {CSV_FILE} is empty.")
         return
 
-    # Clean the data:
-    # 1. Remove any 'FAIL' rows based on the MeanLatency column
-    #    Note: We use 'MeanLatency_cycles' now, as per Volkov's method
+    # Validate column
     if 'MeanLatency_cycles' not in df.columns:
-        print("Error: Column 'MeanLatency_cycles' not found in CSV.")
+        print("Error: Column 'MeanLatency_cycles' missing from CSV.")
         return
 
+    # Clean invalid rows
     df = df[df['MeanLatency_cycles'].astype(str).str.lower() != 'fail']
-    
-    # 2. Convert columns to numeric types
+
+    # Convert types
     df['ThreadsPerBlock'] = pd.to_numeric(df['ThreadsPerBlock'])
     df['Shmem_KB'] = pd.to_numeric(df['Shmem_KB'])
     df['MeanLatency_cycles'] = pd.to_numeric(df['MeanLatency_cycles'])
 
     if df.empty:
-        print("Error: No valid data found after cleaning.")
+        print("Error: No valid data after cleaning.")
         return
 
-    # Find the "Unloaded Latency" (The Minimum of the Means)
+    # Identify unloaded (minimum) latency configuration
     min_mean_lat = df['MeanLatency_cycles'].min()
-    
-    # Find the configuration that achieved this minimum
     best_row = df.loc[df['MeanLatency_cycles'].idxmin()]
-    print(f"------------------------------------------------")
-    print(f"Unloaded Latency (Minimum of Means): {min_mean_lat:.2f} cycles")
-    print(f"Achieved at: TPB={int(best_row['ThreadsPerBlock'])}, Shmem={int(best_row['Shmem_KB'])} KB")
-    print(f"------------------------------------------------")
 
-    # Pivot the data into a 2D grid for the heatmap
+    print("------------------------------------------------")
+    print(f"Unloaded Latency (Minimum Mean): {min_mean_lat:.2f} cycles")
+    print(f"Achieved at TPB={int(best_row['ThreadsPerBlock'])}, "
+          f"Shmem={int(best_row['Shmem_KB'])} KB")
+    print("------------------------------------------------")
+
+    # Pivot to matrix format
     try:
         pivot_table = df.pivot(
-            index='ThreadsPerBlock', 
-            columns='Shmem_KB', 
-            values='MeanLatency_cycles' # Plotting the Mean
+            index='ThreadsPerBlock',
+            columns='Shmem_KB',
+            values='MeanLatency_cycles'
         )
     except ValueError as e:
-        print(f"Error pivoting data: {e}")
+        print(f"Pivot error: {e}")
         return
 
-    # Create the plot
-    plt.figure(figsize=(14, 8))
-    
-    # Draw the heatmap
+    # ------------------------------
+    # Publication-Ready Heatmap
+    # ------------------------------
+
+    plt.figure(figsize=(6.0, 3.8), dpi=300)  # Compact + high DPI for 2-column papers
+
     ax = sns.heatmap(
-        pivot_table, 
-        annot=True, 
-        fmt=".1f", 
-        cmap="viridis_r",  # '_r' reverses: Blue (low latency) is good, Yellow (high) is bad
-        linewidths=.5,
-        cbar_kws={'label': 'Mean Warp Latency (cycles)'}
+        pivot_table,
+        annot=True,
+        fmt=".1f",
+        cmap="viridis_r",
+        linewidths=0.3,
+        linecolor="gray",
+        square=True,  # improves visual clarity when printed small
+        annot_kws={"size": 8},
+        cbar_kws={
+            'label': 'Mean Warp Latency (cycles)',
+            'shrink': 0.75
+        }
     )
-    
-    # Highlight the cell with the minimum value
-    # (Optional visual flair to spot the "Unloaded" value instantly)
+
+    # Highlight minimum latency
     col_idx = pivot_table.columns.get_loc(best_row['Shmem_KB'])
     row_idx = pivot_table.index.get_loc(best_row['ThreadsPerBlock'])
-    
-    # Add a red rectangle around the best configuration
-    rect = patches.Rectangle((col_idx, row_idx), 1, 1, linewidth=3, edgecolor='red', facecolor='none')
+
+    rect = patches.Rectangle(
+        (col_idx, row_idx), 1, 1,
+        linewidth=2,
+        edgecolor='red',
+        facecolor='none'
+    )
     ax.add_patch(rect)
 
-    # Set titles and labels
-    ax.set_title(PLOT_TITLE, fontsize=16, pad=20)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=12)
-    ax.set_ylabel("Threads Per Block", fontsize=12)
-    
-    # Ensure directory exists for the image
-    os.makedirs(os.path.dirname(OUTPUT_IMAGE), exist_ok=True)
+    # Labels and title (smaller for paper figures)
+    ax.set_title(PLOT_TITLE, fontsize=11, pad=6)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=9)
+    ax.set_ylabel("Threads Per Block", fontsize=9)
 
-    # Save the plot
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=8)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=8)
+
     plt.tight_layout()
-    plt.savefig(OUTPUT_IMAGE)
-    
+
+    # Ensure output directory exists
+    os.makedirs(os.path.dirname(OUTPUT_IMAGE) if os.path.dirname(OUTPUT_IMAGE) else '.', exist_ok=True)
+
+    plt.savefig(OUTPUT_IMAGE, dpi=300, bbox_inches='tight')
+
     print(f"\nSuccess! Plot saved to {OUTPUT_IMAGE}")
+
 
 if __name__ == "__main__":
     create_plot()

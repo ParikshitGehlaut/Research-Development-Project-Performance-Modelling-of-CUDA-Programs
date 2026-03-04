@@ -28,8 +28,6 @@ import matplotlib.gridspec as gridspec
 # ── resolve paths ──────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT       = os.path.dirname(SCRIPT_DIR)
-CSV_DIR    = os.path.join(ROOT, "Results", "RTX5000", "synthetic_streaming")
-OUT_DIR    = SCRIPT_DIR
 
 sys.path.insert(0, SCRIPT_DIR)
 from hong_kim_model_fixed import (
@@ -37,8 +35,8 @@ from hong_kim_model_fixed import (
     hong_kim_curve, volkov_curve,
 )
 
-GPU    = GPU_CONFIGS["RTX5000"]
 ALL_AI = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+
 
 
 # ── unit conversion ────────────────────────────────────────────────────────
@@ -144,8 +142,12 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
 #  Entry point
 # ══════════════════════════════════════════════════════════════════════════
 
-def run_single(ai: int):
-    csv_path = os.path.join(CSV_DIR, f"results_a{ai}.csv")
+def run_single(ai: int, gpu_name: str, gpu_config: GPUConfig):
+    csv_dir = os.path.join(ROOT, "Results", gpu_name, "synthetic_streaming")
+    out_dir = os.path.join(SCRIPT_DIR, gpu_name)
+    os.makedirs(out_dir, exist_ok=True)
+    
+    csv_path = os.path.join(csv_dir, f"results_a{ai}.csv")
     if not os.path.exists(csv_path):
         print(f"❌  CSV not found: {csv_path}")
         return
@@ -153,20 +155,24 @@ def run_single(ai: int):
     if df.empty:
         print(f"⚠️  Empty CSV for AI={ai}, skipping.")
         return
-    out = os.path.join(OUT_DIR, f"hk_vs_volkov_fixed_a{ai}.png")
+    out = os.path.join(out_dir, f"hk_vs_volkov_fixed_a{ai}_{gpu_name}.png")
+    
+    global GPU
+    GPU = gpu_config
     generate_comparison_plot(ai, df, out)
 
 
-def run_all():
+def run_all(gpu_name: str, gpu_config: GPUConfig):
     found = 0
+    csv_dir = os.path.join(ROOT, "Results", gpu_name, "synthetic_streaming")
     for ai in ALL_AI:
-        csv_path = os.path.join(CSV_DIR, f"results_a{ai}.csv")
+        csv_path = os.path.join(csv_dir, f"results_a{ai}.csv")
         if os.path.exists(csv_path):
-            run_single(ai)
+            run_single(ai, gpu_name, gpu_config)
             found += 1
         else:
             print(f"⚠️  Skipping AI={ai}: CSV not found")
-    print(f"\n✅  Generated plots for {found}/{len(ALL_AI)} AI values.")
+    print(f"\n✅  Generated plots for {found}/{len(ALL_AI)} AI values on {gpu_name}.")
 
 
 if __name__ == "__main__":
@@ -175,8 +181,12 @@ if __name__ == "__main__":
     grp = parser.add_mutually_exclusive_group(required=True)
     grp.add_argument("--ai",  type=int)
     grp.add_argument("--all", action="store_true")
+    parser.add_argument("--gpu", type=str, required=True, choices=["RTX5000", "A100", "H100"], help="Target GPU")
     args = parser.parse_args()
+    
+    gpu_config = GPU_CONFIGS[args.gpu]
+    
     if args.all:
-        run_all()
+        run_all(args.gpu, gpu_config)
     else:
-        run_single(args.ai)
+        run_single(args.ai, args.gpu, gpu_config)
