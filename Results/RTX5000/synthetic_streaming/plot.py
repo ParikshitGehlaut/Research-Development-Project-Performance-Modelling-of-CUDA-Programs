@@ -59,9 +59,9 @@ def generate_plot(df, arith_intensity, output_path):
                marker='o', s=50, color='black', facecolors='black',
                label='Measured', zorder=3)
 
-    ax.set_xlabel("Occupancy (warps/SM)", fontweight='bold')
+    ax.set_xlabel("Warps / SM", fontweight='bold')
     ax.set_ylabel("GFLOP/s", fontweight='bold')
-    ax.set_title(f"AI = {arith_intensity}", fontsize=14, fontweight='bold')
+
     ax.set_xlim(left=0, right=max_occ * 1.1)
     ax.set_ylim(bottom=0)
 
@@ -76,7 +76,7 @@ def generate_plot(df, arith_intensity, output_path):
     fig.tight_layout(pad=0.5)
     plt.savefig(output_path, bbox_inches="tight", dpi=300)
     plt.close()
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
 
 
 def batch_generate():
@@ -93,7 +93,7 @@ def batch_generate():
         out = f"volkov_rtx5000_a{ai}.png"
         generate_plot(df, ai, out)
         generated += 1
-    print(f"\n✅ Generated {generated} plots for RTX 5000.")
+    print(f"\nGenerated {generated} plots for RTX 5000.")
 
 
 if __name__ == "__main__":
