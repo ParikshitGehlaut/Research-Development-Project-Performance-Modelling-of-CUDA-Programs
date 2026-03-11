@@ -71,7 +71,7 @@ def create_plot():
     # ------------------------------
     # Publication-Ready Heatmap
     # ------------------------------
-    plt.figure(figsize=(6.0, 3.8), dpi=300)  # Compact for 2-column papers
+    plt.figure(figsize=(20, 14), dpi=300)  # Large figure so fonts survive 3-across shrink
     
     ax = sns.heatmap(
         pivot_table,
@@ -81,7 +81,7 @@ def create_plot():
         linewidths=0.3,
         linecolor="gray",
         square=True,
-        annot_kws={"size": 8, "weight": "normal"},
+        annot_kws={"size": 32, "weight": "normal"},
         cbar_kws={
             'label': 'Mean Latency (cycles)',
             'shrink': 0.75
@@ -99,17 +99,17 @@ def create_plot():
     )
     ax.add_patch(rect)
     
-    # Labels and title (optimized for paper figures)
-    ax.set_title(PLOT_TITLE, fontsize=11, pad=6)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=9)
-    ax.set_ylabel("Threads Per Block", fontsize=9)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=8, rotation=0)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=8, rotation=0)
+    # Labels and title (large fonts for 3-across layout in 2-column paper)
+    ax.set_title(PLOT_TITLE, fontsize=44, pad=20)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=36)
+    ax.set_ylabel("Threads Per Block", fontsize=36)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32, rotation=0)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32, rotation=0)
     
     # Adjust colorbar label font
     cbar = ax.collections[0].colorbar
-    cbar.ax.tick_params(labelsize=8)
-    cbar.set_label('Mean Latency (cycles)', fontsize=9)
+    cbar.ax.tick_params(labelsize=28)
+    cbar.set_label('Mean Latency (cycles)', fontsize=32)
     
     plt.tight_layout()
     
@@ -117,7 +117,7 @@ def create_plot():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     # Save formatted plot
-    plot_path = os.path.join(OUTPUT_DIR, f'{TARGET_OP}_latency_heatmap.png')
+    plot_path = os.path.join(OUTPUT_DIR, f'alu_latency_heatmap_a100.png')
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     print(f"Plot saved to {plot_path}")
     

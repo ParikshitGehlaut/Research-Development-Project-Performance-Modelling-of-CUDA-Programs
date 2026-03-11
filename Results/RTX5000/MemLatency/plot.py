@@ -8,7 +8,7 @@ import os
 # Configuration
 # ------------------------------
 CSV_FILE = 'latency_summary.csv'
-OUTPUT_IMAGE = 'Results/RTX5000/Latency/latency_heatmap.png'
+OUTPUT_IMAGE = 'mem_latency_heatmap_rtx5000.png'
 PLOT_TITLE = 'RTX 5000 Mean Memory Latency (Cycles) vs. Occupancy'
 # ------------------------------
 
@@ -70,7 +70,7 @@ def create_plot():
     # Publication-Ready Heatmap
     # ------------------------------
 
-    plt.figure(figsize=(6.0, 3.8), dpi=300)  # Compact + high DPI for 2-column papers
+    plt.figure(figsize=(20, 14), dpi=300)  # Large figure so fonts survive 3-across shrink
 
     ax = sns.heatmap(
         pivot_table,
@@ -80,7 +80,7 @@ def create_plot():
         linewidths=0.3,
         linecolor="gray",
         square=True,  # improves visual clarity when printed small
-        annot_kws={"size": 8},
+        annot_kws={"size": 32},
         cbar_kws={
             'label': 'Mean Warp Latency (cycles)',
             'shrink': 0.75
@@ -99,18 +99,23 @@ def create_plot():
     )
     ax.add_patch(rect)
 
-    # Labels and title (smaller for paper figures)
-    ax.set_title(PLOT_TITLE, fontsize=11, pad=6)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=9)
-    ax.set_ylabel("Threads Per Block", fontsize=9)
+    # Labels and title (large fonts for 3-across layout in 2-column paper)
+    ax.set_title(PLOT_TITLE, fontsize=44, pad=20)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=36)
+    ax.set_ylabel("Threads Per Block", fontsize=36)
 
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=8)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=8)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32)
+
+    # Colorbar font sizes
+    cbar = ax.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=28)
+    cbar.set_label('Mean Warp Latency (cycles)', fontsize=32)
 
     plt.tight_layout()
 
     # Ensure output directory exists
-    os.makedirs(os.path.dirname(OUTPUT_IMAGE), exist_ok=True)
+    os.makedirs(os.path.dirname(OUTPUT_IMAGE) if os.path.dirname(OUTPUT_IMAGE) else '.', exist_ok=True)
 
     plt.savefig(OUTPUT_IMAGE, dpi=300, bbox_inches='tight')
 

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.ticker import MaxNLocator
 
 # ── resolve paths ──────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,16 +35,16 @@ def setup_style():
         'font.family'      : 'serif',
         'font.serif'       : ['Times New Roman', 'DejaVu Serif'],
         'mathtext.fontset' : 'stix',
-        'font.size'        : 13,
-        'axes.labelsize'   : 14,
-        'legend.fontsize'  : 11,
-        'xtick.labelsize'  : 11,
-        'ytick.labelsize'  : 11,
-        'axes.linewidth'   : 1.2,
-        'xtick.major.width': 1.0,
-        'ytick.major.width': 1.0,
-        'xtick.major.size' : 4,
-        'ytick.major.size' : 4,
+        'font.size'        : 18,
+        'axes.labelsize'   : 20,
+        'legend.fontsize'  : 16,
+        'xtick.labelsize'  : 16,
+        'ytick.labelsize'  : 16,
+        'axes.linewidth'   : 1.5,
+        'xtick.major.width': 1.3,
+        'ytick.major.width': 1.3,
+        'xtick.major.size' : 5,
+        'ytick.major.size' : 5,
         'xtick.direction'  : 'in',
         'ytick.direction'  : 'in',
     })
@@ -80,7 +81,7 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
     xlim  = (0, max_occ * 1.15)
     ylim  = (0, y_max)
 
-    fig = plt.figure(figsize=(9, 3.8), dpi=300)
+    fig = plt.figure(figsize=(10, 4.2), dpi=300)
     
     # Create grid based on 1 row, 2 columns
     gs  = gridspec.GridSpec(1, 2, wspace=0.30)
@@ -93,7 +94,7 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
                 color='#555555', linewidth=2.5, linestyle='-', zorder=2)
         # Experimental scatter
         ax.scatter(occ, gflo,
-                   marker='o', s=28,
+                   marker='o', s=40,
                    color='black', facecolors='black', zorder=3)
 
         ax.set_xlabel("warps/SM")
@@ -102,15 +103,17 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
 
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.grid(True, linestyle='-', linewidth=0.35,
+        ax.grid(True, linestyle='-', linewidth=0.5,
                 color='#bbbbbb', alpha=0.6)
 
         ax.text(0.97, 0.06, label,
                 transform=ax.transAxes,
                 ha='right', va='bottom',
-                fontsize=11, fontstyle='italic')
+                fontsize=16, fontstyle='italic')
 
     fig.tight_layout(pad=0.6)
     plt.savefig(out_path, bbox_inches="tight", dpi=300)

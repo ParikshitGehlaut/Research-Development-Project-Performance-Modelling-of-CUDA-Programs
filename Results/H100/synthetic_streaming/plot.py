@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import os
 import sys
@@ -34,16 +35,16 @@ def setup_style():
         'font.family': 'serif',
         'font.serif': ['Times New Roman', 'DejaVu Serif'],
         'mathtext.fontset': 'stix',
-        'font.size': 14,
-        'axes.labelsize': 16,
-        'legend.fontsize': 13,
-        'xtick.labelsize': 13,
-        'ytick.labelsize': 13,
-        'axes.linewidth': 1.2,
-        'xtick.major.width': 1.0,
-        'ytick.major.width': 1.0,
-        'xtick.major.size': 4,
-        'ytick.major.size': 4,
+        'font.size': 54,
+        'axes.labelsize': 84,
+        'legend.fontsize': 72,
+        'xtick.labelsize': 48,
+        'ytick.labelsize': 48,
+        'axes.linewidth': 3.0,
+        'xtick.major.width': 2.5,
+        'ytick.major.width': 2.5,
+        'xtick.major.size': 10,
+        'ytick.major.size': 10,
         'xtick.direction': 'in',
         'ytick.direction': 'in',
     })
@@ -51,37 +52,40 @@ def setup_style():
 
 def generate_plot(df, arith_intensity, output_path):
     setup_style()
-    fig, ax = plt.subplots(figsize=(5, 3.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(15, 11.4), dpi=300)
 
     max_occ = df["MaxAttainedOccupancy"].max()
     n_vals = np.linspace(0.1, max_occ * 1.05, 500)
     theo = volkov_model(n_vals, arith_intensity)
 
-    ax.plot(n_vals, theo, color='black', linewidth=2.0, linestyle='--',
-            label='Theoretical', zorder=2)
+    ax.plot(n_vals, theo, color='black', linewidth=4.0, linestyle='--',
+            label='Volkov Model', zorder=2)
 
     ax.plot(df["MaxAttainedOccupancy"], df["GFLOPS"],
-            marker='o', markersize=7, linestyle='none',
+            marker='o', markersize=16, linestyle='none',
             color='black', markerfacecolor='black',
-            label='Experimental', zorder=3)
+            label='Measured', zorder=3)
 
     ax.set_xlabel("Warps / SM", fontweight='bold')
     ax.set_ylabel("GFLOP/s", fontweight='bold')
     ax.set_xlim(left=0, right=max_occ * 1.05)
     ax.set_ylim(bottom=0)
 
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
+
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.grid(True, which='major', linestyle='-', linewidth=0.4,
+    ax.grid(True, which='major', linestyle='-', linewidth=0.5,
             color='#cccccc', alpha=0.7)
 
-    ax.legend(loc='best', frameon=False)
+    ax.legend(loc='best', frameon=False, handlelength=2.0)
 
     fig.tight_layout(pad=0.5)
     plt.savefig(output_path, bbox_inches="tight", dpi=300)
     plt.close()
-    print(f"✅ Plot saved: {output_path}")
+    print(f"Plot saved: {output_path}")
 
 
 def batch_generate():
@@ -97,7 +101,7 @@ def batch_generate():
         out = f"synthetic_kernel_a{ai}_h100.png"
         generate_plot(df, ai, out)
         generated += 1
-    print(f"\n✅ Generated {generated} plots.")
+    print(f"\nGenerated {generated} plots.")
 
 
 if __name__ == "__main__":
