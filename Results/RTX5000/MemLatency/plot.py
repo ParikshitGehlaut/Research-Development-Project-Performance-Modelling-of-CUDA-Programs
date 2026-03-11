@@ -69,55 +69,50 @@ def create_plot():
     # ------------------------------
     # Publication-Ready Heatmap
     # ------------------------------
-
-    plt.figure(figsize=(20, 14), dpi=300)  # Large figure so fonts survive 3-across shrink
+    # Fixed figsize for all GPUs — same canvas = same proportions in paper.
+    # Memory latency values are 3-digit integers (e.g. 236, 347), so fmt=".0f"
+    # gives the shortest display ("236" vs "236.0") and eliminates cell overflow.
+    FIG_W, FIG_H = 14, 7
+    fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=350)
 
     ax = sns.heatmap(
         pivot_table,
         annot=True,
-        fmt=".1f",
+        fmt=".0f",               # integer display
         cmap="viridis_r",
-        linewidths=0.3,
+        linewidths=0.8,
         linecolor="gray",
-        square=True,  # improves visual clarity when printed small
-        annot_kws={"size": 32},
-        cbar_kws={
-            'label': 'Mean Warp Latency (cycles)',
-            'shrink': 0.75
-        }
+        square=False,
+        annot_kws={"size": 32, "weight": "bold"},
+        ax=ax,
+        cbar=False,              # removed — frees ~15% width for larger fonts
     )
 
     # Highlight minimum latency
     col_idx = pivot_table.columns.get_loc(best_row['Shmem_KB'])
     row_idx = pivot_table.index.get_loc(best_row['ThreadsPerBlock'])
-
     rect = patches.Rectangle(
         (col_idx, row_idx), 1, 1,
-        linewidth=2,
+        linewidth=3,
         edgecolor='red',
         facecolor='none'
     )
     ax.add_patch(rect)
 
-    # Labels and title (large fonts for 3-across layout in 2-column paper)
-    ax.set_title(PLOT_TITLE, fontsize=44, pad=20)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=36)
-    ax.set_ylabel("Threads Per Block", fontsize=36)
+    # Labels and title
+    ax.set_title(PLOT_TITLE, fontsize=28, pad=14)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=38, fontweight='bold', labelpad=12)
+    ax.set_ylabel("Threads Per Block", fontsize=38, fontweight='bold', labelpad=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32, rotation=0)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32, rotation=0)
 
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32)
-
-    # Colorbar font sizes
-    cbar = ax.collections[0].colorbar
-    cbar.ax.tick_params(labelsize=28)
-    cbar.set_label('Mean Warp Latency (cycles)', fontsize=32)
-
-    plt.tight_layout()
+    # No colorbar — use full width for heatmap
+    plt.subplots_adjust(left=0.12, right=0.98, top=0.88, bottom=0.18)
 
     # Ensure output directory exists
     os.makedirs(os.path.dirname(OUTPUT_IMAGE) if os.path.dirname(OUTPUT_IMAGE) else '.', exist_ok=True)
 
-    plt.savefig(OUTPUT_IMAGE, dpi=300, bbox_inches='tight')
+    plt.savefig(OUTPUT_IMAGE, dpi=350, bbox_inches='tight')
 
     print(f"\nSuccess! Plot saved to {OUTPUT_IMAGE}")
 

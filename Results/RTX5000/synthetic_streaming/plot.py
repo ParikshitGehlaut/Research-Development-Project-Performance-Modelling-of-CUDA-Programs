@@ -24,61 +24,52 @@ def volkov_model(n, ai):
 
 
 def setup_style():
+    """Minimal global style — fonts only; sizes set per-axis for precision."""
     plt.rcParams.update({
         'font.family': 'serif',
         'font.serif': ['Times New Roman', 'DejaVu Serif'],
         'mathtext.fontset': 'stix',
-        'font.size': 54,
-        'axes.labelsize': 84,
-        'legend.fontsize': 72,
-        'xtick.labelsize': 48,
-        'ytick.labelsize': 48,
-        'axes.linewidth': 3.0,
-        'xtick.major.width': 2.5,
-        'ytick.major.width': 2.5,
-        'xtick.major.size': 10,
-        'ytick.major.size': 10,
-        'xtick.direction': 'in',
-        'ytick.direction': 'in',
     })
 
 
 def generate_plot(df, arith_intensity, output_path):
     setup_style()
-    fig, ax = plt.subplots(figsize=(15, 11.4), dpi=300)
+    fig, ax = plt.subplots(figsize=(9, 7), dpi=350)
 
     max_occ = df["MaxAttainedOccupancy"].max()
     n_vals = np.linspace(0.1, max_occ * 1.1, 500)
     theo = volkov_model(n_vals, arith_intensity)
 
-    # Theoretical curve
-    ax.plot(n_vals, theo, color='black', linewidth=4.0, linestyle='--',
+    ax.plot(n_vals, theo, color='black', linewidth=2.5, linestyle='--',
             label='Volkov Model', zorder=2)
 
-    # Experimental data
     ax.scatter(df["MaxAttainedOccupancy"], df["GFLOPS"],
-               marker='o', s=150, color='black', facecolors='black',
+               marker='o', s=100, color='black', facecolors='black',
                label='Measured', zorder=3)
 
-    ax.set_xlabel("Warps / SM", fontweight='bold')
-    ax.set_ylabel("GFLOP/s", fontweight='bold')
-
+    ax.set_xlabel("Warps / SM", fontsize=50, fontweight='bold', labelpad=10)
+    ax.set_ylabel("GFLOP/s", fontsize=50, fontweight='bold', labelpad=10)
     ax.set_xlim(left=0, right=max_occ * 1.1)
     ax.set_ylim(bottom=0)
 
-    ax.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
+    ax.tick_params(axis='both', which='major', labelsize=36,
+                   width=1.5, length=5, direction='in')
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
 
-    ax.grid(True, which='major', linestyle='-', linewidth=0.5,
-            color='#cccccc', alpha=0.7)
+    ax.grid(True, which='major', linestyle='--', linewidth=0.5,
+            color='#aaaaaa', alpha=0.6)
 
-    ax.legend(loc='best', frameon=False, handlelength=2.0)
+    ax.legend(loc='lower right', frameon=False, fontsize=32, handlelength=2.0)
 
-    fig.tight_layout(pad=0.5)
-    plt.savefig(output_path, bbox_inches="tight", dpi=300)
+    plt.subplots_adjust(left=0.14, right=0.97, top=0.96, bottom=0.13)
+
+    plt.savefig(output_path, bbox_inches="tight", dpi=350)
     plt.close()
     print(f"Saved: {output_path}")
 
