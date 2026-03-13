@@ -9,7 +9,7 @@ import os
 # ------------------------------
 CSV_FILE = 'latency_summary.csv'
 OUTPUT_IMAGE = 'mem_latency_heatmap_rtx5000.png'
-PLOT_TITLE = 'RTX 5000 Mean Memory Latency (Cycles) vs. Occupancy'
+PLOT_TITLE = 'Mean Memory Latency vs. Occupancy'
 # ------------------------------
 
 
@@ -66,13 +66,8 @@ def create_plot():
         print(f"Pivot error: {e}")
         return
 
-    # ------------------------------
-    # Publication-Ready Heatmap
-    # ------------------------------
-    # Fixed figsize for all GPUs — same canvas = same proportions in paper.
-    # Memory latency values are 3-digit integers (e.g. 236, 347), so fmt=".0f"
-    # gives the shortest display ("236" vs "236.0") and eliminates cell overflow.
-    FIG_W, FIG_H = 14, 7
+    # Mathematical perfect scale: 7 cols * 1.0" + 3.0" margin | 5 rows * 1.2" + 3.5" margin
+    FIG_W, FIG_H = 10.0, 9.5
     fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=350)
 
     ax = sns.heatmap(
@@ -82,8 +77,8 @@ def create_plot():
         cmap="viridis_r",
         linewidths=0.8,
         linecolor="gray",
-        square=False,
-        annot_kws={"size": 32, "weight": "bold"},
+        square=False,  # square implicitly enforced by precise subplots_adjust
+        annot_kws={"size": 28, "weight": "bold"},
         ax=ax,
         cbar=False,              # removed — frees ~15% width for larger fonts
     )
@@ -100,19 +95,20 @@ def create_plot():
     ax.add_patch(rect)
 
     # Labels and title
-    ax.set_title(PLOT_TITLE, fontsize=28, pad=14)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=38, fontweight='bold', labelpad=12)
-    ax.set_ylabel("Threads Per Block", fontsize=38, fontweight='bold', labelpad=12)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32, rotation=0)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32, rotation=0)
+    ax.set_title(PLOT_TITLE, fontsize=28, pad=15)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=32, fontweight='bold', labelpad=15)
+    ax.set_ylabel("Threads Per Block", fontsize=32, fontweight='bold', labelpad=15)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=26, rotation=0)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=26, rotation=0)
 
-    # No colorbar — use full width for heatmap
-    plt.subplots_adjust(left=0.12, right=0.98, top=0.88, bottom=0.18)
+    # Exact mathematically aligned margins for (10x9.5 overall -> 7x6 plot area + 2.5 L / 0.5 R / 1.5 T / 2.0 B)
+    plt.subplots_adjust(left=0.25, right=0.95, top=0.8421, bottom=0.2105)
 
     # Ensure output directory exists
     os.makedirs(os.path.dirname(OUTPUT_IMAGE) if os.path.dirname(OUTPUT_IMAGE) else '.', exist_ok=True)
 
-    plt.savefig(OUTPUT_IMAGE, dpi=350, bbox_inches='tight')
+    # Removed bbox_inches='tight' since it arbitrarily breaks absolute margin alignments.
+    plt.savefig(OUTPUT_IMAGE, dpi=350)
 
     print(f"\nSuccess! Plot saved to {OUTPUT_IMAGE}")
 

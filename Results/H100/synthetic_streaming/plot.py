@@ -51,16 +51,16 @@ def generate_plot(df, arith_intensity, output_path):
             label='Volkov Model', zorder=2)
 
     ax.plot(df["MaxAttainedOccupancy"], df["GFLOPS"],
-            marker='o', markersize=10, linestyle='none',
+            marker='o', markersize=12, linestyle='none',
             color='black', markerfacecolor='black',
             label='Measured', zorder=3)
 
-    ax.set_xlabel("Warps / SM", fontsize=54, fontweight='bold', labelpad=10)
-    ax.set_ylabel("GFLOP/s", fontsize=54, fontweight='bold', labelpad=10)
+    ax.set_xlabel("Warps / SM", fontsize=64, fontweight='bold', labelpad=10)
+    ax.set_ylabel("GFLOP/s", fontsize=64, fontweight='bold', labelpad=10)
     ax.set_xlim(left=0, right=max_occ * 1.05)
     ax.set_ylim(bottom=0)
 
-    ax.tick_params(axis='both', which='major', labelsize=46,
+    ax.tick_params(axis='both', which='major', labelsize=54,
                    width=1.5, length=5, direction='in')
     ax.xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
@@ -73,7 +73,7 @@ def generate_plot(df, arith_intensity, output_path):
     ax.grid(True, which='major', linestyle='--', linewidth=0.5,
             color='#aaaaaa', alpha=0.6)
 
-    ax.legend(loc='lower right', frameon=False, fontsize=40, handlelength=2.0)
+    ax.legend(loc='lower right', frameon=False, fontsize=48, handlelength=2.0)
 
     plt.subplots_adjust(left=0.14, right=0.97, top=0.96, bottom=0.13)
 

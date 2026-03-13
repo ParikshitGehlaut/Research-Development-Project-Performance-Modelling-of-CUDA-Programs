@@ -11,7 +11,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_FILE = os.path.join(SCRIPT_DIR, 'arith_latency_summary.csv')
 OUTPUT_DIR = SCRIPT_DIR  # Output to the same directory as the script
 TARGET_OP = 'FMUL'  # Change to 'FMUL', 'FMA', etc. as needed
-PLOT_TITLE = f'H100 {TARGET_OP} Mean Latency (Cycles) vs. Occupancy'
+PLOT_TITLE = f'{TARGET_OP} Mean Latency vs. Occupancy'
 
 # ------------------------------
 def create_plot():
@@ -68,10 +68,8 @@ def create_plot():
         print(f"Pivot error: {e}")
         return
     
-    # ------------------------------
-    # Publication-Ready Heatmap
-    # ------------------------------
-    FIG_W, FIG_H = 14, 7   # inches — same for all three GPUs
+    # Mathematical perfect scale: 10 cols * 1.0" + 3.0" margin | 4 rows * 1.2" + 3.5" margin
+    FIG_W, FIG_H = 13.0, 8.3
     fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=350)
 
     ax = sns.heatmap(
@@ -82,7 +80,7 @@ def create_plot():
         linewidths=0.8,
         linecolor="gray",
         square=False,
-        annot_kws={"size": 32, "weight": "bold"},
+        annot_kws={"size": 28, "weight": "bold"},
         ax=ax,
         cbar=False,
     )
@@ -99,21 +97,21 @@ def create_plot():
     ax.add_patch(rect)
 
     # Labels and title
-    ax.set_title(PLOT_TITLE, fontsize=28, pad=14)
-    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=38, fontweight='bold', labelpad=12)
-    ax.set_ylabel("Threads Per Block", fontsize=38, fontweight='bold', labelpad=12)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=32, rotation=0)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=32, rotation=0)
+    ax.set_title(PLOT_TITLE, fontsize=28, pad=15)
+    ax.set_xlabel("Shared Memory per Block (KB)", fontsize=32, fontweight='bold', labelpad=15)
+    ax.set_ylabel("Threads Per Block", fontsize=32, fontweight='bold', labelpad=15)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=26, rotation=0)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=26, rotation=0)
 
-    # No colorbar — use full width for heatmap
-    plt.subplots_adjust(left=0.12, right=0.98, top=0.88, bottom=0.18)
+    # Exact mathematically aligned margins for (13x8.3 overall -> 10x4.8 plot area + 2.5 L / 0.5 R / 1.5 T / 2.0 B)
+    plt.subplots_adjust(left=0.1923, right=0.9615, top=0.8193, bottom=0.2410)
     
     # Ensure output directory exists (though it's same as SCRIPT_DIR now)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    # Save formatted plot
+    # Removed bbox_inches='tight' since it arbitrarily breaks absolute margin alignments.
     plot_path = os.path.join(OUTPUT_DIR, f'alu_latency_heatmap_h100.png')
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.savefig(plot_path, dpi=350)
     print(f"Plot saved to {plot_path}")
     
     # Save the filtered data to CSV in the same directory
