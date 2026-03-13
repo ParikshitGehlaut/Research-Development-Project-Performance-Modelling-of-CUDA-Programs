@@ -56,11 +56,11 @@ def setup_style():
         'font.family'      : 'serif',
         'font.serif'       : ['Times New Roman', 'DejaVu Serif'],
         'mathtext.fontset' : 'stix',
-        'font.size'        : 18,
-        'axes.labelsize'   : 20,
-        'legend.fontsize'  : 16,
-        'xtick.labelsize'  : 16,
-        'ytick.labelsize'  : 16,
+        'font.size'        : 24,
+        'axes.labelsize'   : 36,
+        'legend.fontsize'  : 26,
+        'xtick.labelsize'  : 28,
+        'ytick.labelsize'  : 28,
         'axes.linewidth'   : 1.5,
         'xtick.major.width': 1.3,
         'ytick.major.width': 1.3,
@@ -103,7 +103,7 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
     xlim  = (0, max_occ * 1.15)
     ylim  = (0, y_max)
 
-    fig = plt.figure(figsize=(10, 4.2), dpi=300)
+    fig = plt.figure(figsize=(10, 5.5), dpi=300)
     gs  = gridspec.GridSpec(1, 2, wspace=0.30)
 
     for col, (curve, label) in enumerate(zip([hk_pred, vk_pred], PANEL_LABELS)):
@@ -111,29 +111,28 @@ def generate_comparison_plot(ai: int, df: pd.DataFrame, out_path: str):
 
         # Model curve
         ax.plot(n_vals, curve,
-                color='#555555', linewidth=2.5, linestyle='-', zorder=2)
+                color='#555555', linewidth=2.5, linestyle='-', zorder=2,
+                label=label)
         # Experimental scatter
         ax.scatter(occ, gflo,
                    marker='o', s=40,
-                   color='black', facecolors='black', zorder=3)
+                   color='black', facecolors='black', zorder=3,
+                   label='Measured')
 
-        ax.set_xlabel("warps/SM")
+        ax.set_xlabel("warps/SM", fontsize=36, fontweight='bold', labelpad=8)
         if col == 0:
-            ax.set_ylabel("GFLOP/s")
+            ax.set_ylabel("GFLOP/s", fontsize=36, fontweight='bold', labelpad=8)
 
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True, prune='lower'))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.grid(True, linestyle='-', linewidth=0.5,
                 color='#bbbbbb', alpha=0.6)
 
-        ax.text(0.97, 0.06, label,
-                transform=ax.transAxes,
-                ha='right', va='bottom',
-                fontsize=16, fontstyle='italic')
+        ax.legend(loc='lower right', frameon=False, fontsize=18, handlelength=2.0)
 
     fig.tight_layout(pad=0.6)
     plt.savefig(out_path, bbox_inches="tight", dpi=300)

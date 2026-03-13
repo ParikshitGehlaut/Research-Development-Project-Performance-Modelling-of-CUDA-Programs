@@ -1,25 +1,23 @@
 import os
 from PIL import Image
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(SCRIPT_DIR)
+
 ais = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
 archs = ['RTX5000', 'A100', 'H100']
 
-# Determine paths for each architecture based on the naming convention found
-# e.g., Results/A100/synthetic_streaming/synthetic_kernel_a2_a100.png
-# Results/H100/synthetic_streaming/synthetic_kernel_a2_h100.png
-# Results/RTX5000/synthetic_streaming/volkov_rtx5000_a2.png
-
 def get_image_path(arch, ai):
-    base_dir = os.path.join('Results', arch, 'synthetic_streaming')
+    base_dir = os.path.join(ROOT, 'Results', arch, 'synthetic_streaming')
     if arch == 'A100':
         return os.path.join(base_dir, f'synthetic_kernel_a{ai}_a100.png')
     elif arch == 'H100':
         return os.path.join(base_dir, f'synthetic_kernel_a{ai}_h100.png')
     elif arch == 'RTX5000':
-        return os.path.join(base_dir, f'volkov_rtx5000_a{ai}.png')
+        return os.path.join(base_dir, f'synthetic_kernel_a{ai}_rtx5000.png')
     return None
 
-os.makedirs('Images', exist_ok=True)
+os.makedirs(SCRIPT_DIR, exist_ok=True)
 
 for ai in ais:
     images = []
@@ -51,7 +49,7 @@ for ai in ais:
             new_im.paste(im, (x_offset, 0))
             x_offset += im.size[0]
             
-        out_path = os.path.join('Images', f'ai{ai}_row_merged.png')
+        out_path = os.path.join(SCRIPT_DIR, f'ai{ai}_row_merged.png')
         new_im.save(out_path)
         print(f"Successfully merged {out_path}")
     else:
