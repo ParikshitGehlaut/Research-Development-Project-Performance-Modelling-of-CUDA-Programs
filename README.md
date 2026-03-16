@@ -104,9 +104,15 @@ Volkov's model is a closed-form application of **Little's Law** to the GPU execu
 ```
 T(n) = warp_size × AI × min(
     n / (mem_lat + AI × alu_lat),   # latency-limited regime
-    mem_throughput / warp_load,      # memory bandwidth limited
+    mem_thru,                        # memory bandwidth limited (IPC/SM)
     issue_throughput / (AI + 1)      # issue slot limited
 )
+```
+
+where `mem_thru` is peak memory bandwidth expressed in warp-loads per cycle per SM (= memory IPC/SM):
+
+```
+mem_thru = peak_mem_bw / (clock × n_sms × warp_size × bytes_per_load)
 ```
 
 The three terms correspond to the three possible bottlenecks: latency hiding (linear growth with occupancy), memory bandwidth saturation, and instruction issue throughput saturation. This gives the characteristic shape of a curve that rises linearly at low occupancy and then plateaus.
